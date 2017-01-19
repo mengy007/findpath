@@ -13,11 +13,8 @@ export default class Tile extends Component {
 	render() {
 		return (
 			<td style={{
-				border: "0",
 				width: "20px",
 				height: "20px",
-				margin: "0",
-				padding: "0",
 				backgroundColor: this.props.bgColor,
 				cursor: "pointer"
 			}} onClick={this.handleClick.bind(this)} ></td>

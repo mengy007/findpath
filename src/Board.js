@@ -16,7 +16,7 @@ export default class Board extends Component {
 			var cols = [];
 
 			for (let c = 0; c < this.props.cols; c++) {
-				var type = this.props.tileMap[r][c];
+				var type = this.props.tileMap[r][c].type;
 				var backgroundColor = "#FFF";
 
 				if (type == "S") {

@@ -45,7 +45,11 @@ class App extends Component {
           type = "#";
         }
 
-        cols.push(type);
+        cols.push({
+          type: type,
+          x: c,
+          y: r
+        });
         count++;
       }
 
@@ -99,10 +103,9 @@ class App extends Component {
 
     while (openNodes.length > 0) {
       var lowestOpenNodeIndex = this.lowestFScore(openNodes)
-console.log(lowestOpenNodeIndex);
       var currentNode = openNodes[lowestOpenNodeIndex];
       var neighborNodes = [];
-console.log(currentNode);
+
       // Remove current node from open nodes
       this.removeNode(currentNode, openNodes);
       closedNodes.push(currentNode);
@@ -112,20 +115,18 @@ console.log(currentNode);
       }
 
       // Get valid neighbor nodes
-      if ((currentNode.x-1) > -1 && tileMap[currentNode.y][currentNode.x-1] != "#") {
+      if ((currentNode.x-1) > -1 && tileMap[currentNode.y][currentNode.x-1].type != "#") {
         neighborNodes.push({x: currentNode.x-1, y: currentNode.y});
       }
-      if ((currentNode.x+1) < this.state.cols && tileMap[currentNode.y][currentNode.x+1] != "#") {
+      if ((currentNode.x+1) < this.state.cols && tileMap[currentNode.y][currentNode.x+1].type != "#") {
         neighborNodes.push({x: currentNode.x+1, y: currentNode.y});
       }
-      if ((currentNode.y+1) < this.state.rows && tileMap[currentNode.y+1][currentNode.x] != "#") {
+      if ((currentNode.y+1) < this.state.rows && tileMap[currentNode.y+1][currentNode.x].type != "#") {
         neighborNodes.push({x: currentNode.x, y: currentNode.y+1});
       }
-      if ((currentNode.y-1) < -1 && tileMap[currentNode.y-1][currentNode.x] != "#") {
+      if ((currentNode.y-1) < -1 && tileMap[currentNode.y-1][currentNode.x].type != "#") {
         neighborNodes.push({x: currentNode.x, y: currentNode.y-1});
       }
-
-      console.log("Neighbors: " + neighborNodes.length);
 
       for (let i = 0; i < neighborNodes.length; i++) {
 
@@ -151,7 +152,6 @@ console.log(currentNode);
         }
       }
     }
-    console.log("DONE");
 
     return false;
   }
@@ -202,7 +202,7 @@ console.log(currentNode);
 
   setTile(x, y, type) {
     var tileMap = this.state.tileMap;
-    tileMap[y][x] = type;
+    tileMap[y][x].type = type;
 
     this.setState({
       rows: this.state.rows,
@@ -215,15 +215,15 @@ console.log(currentNode);
 
   toggleTile(x, y) {
     var tileMap = this.state.tileMap;
-    var type = tileMap[y][x];
+    var type = tileMap[y][x].type;
     var newType = "B";
 
     if (type == "B") {
       newType = "#";
-      tileMap[y][x] = newType;
+      tileMap[y][x].type = newType;
     } else if (type == "#") {
       newType = "B";
-      tileMap[y][x] = newType;
+      tileMap[y][x].type = newType;
     }
 
     this.setState({
