@@ -19,6 +19,7 @@ export default class Board extends Component {
 				var type = this.props.tileMap[r][c].type;
 				var marker = this.props.tileMap[r][c].marker;
 				var backgroundColor = "#EEE";
+				var color = "#CCC";
 
 				if (type == "S") {
 					backgroundColor = "#0F0";
@@ -27,14 +28,15 @@ export default class Board extends Component {
 				} else if (type == "#") {
 					backgroundColor = "#777";
 				} else if (type == "P") {
-					backgroundColor = "#55F";
+					backgroundColor = "#FF5";
+					color = "#00F";
 				} else if (type == "Y") {
 					backgroundColor = "#FF0";
 				} else if (type == "O") {
-					backgroundColor = "#FFA";
+					backgroundColor = "#FF5";
 				}
 
-				cols.push(<Tile key={c + "_" + r} type={type} marker={marker} xPos={c} yPos={r} bgColor={backgroundColor} toggleTile={this.props.toggleTile} />);
+				cols.push(<Tile key={c + "_" + r} type={type} color={color} marker={marker} xPos={c} yPos={r} bgColor={backgroundColor} toggleTile={this.props.toggleTile} />);
 			}
 
 			rows.push(<tr>{cols}</tr>)

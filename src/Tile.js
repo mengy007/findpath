@@ -15,6 +15,7 @@ export default class Tile extends Component {
 			<td style={{
 				width: "22px",
 				height: "22px",
+				color: this.props.color,
 				backgroundColor: this.props.bgColor,
 				cursor: "pointer"
 			}} onClick={this.handleClick.bind(this)} >{this.props.marker}</td>
