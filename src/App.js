@@ -5,7 +5,7 @@ import './App.css';
 class App extends Component {
   constructor() {
     var numRows = 40;
-    var numCols = 40;
+    var numCols = 80;
     
     super();
 
@@ -22,8 +22,8 @@ class App extends Component {
 
   genNewTilemap(numRows, numCols) {
     var numTiles = numRows * numCols;
-    var start = Math.floor(Math.random() * (numTiles / 2))+1;
-    var end = Math.floor(Math.random() * (numTiles - (numTiles / 2)) + (numTiles / 2))-1;
+    var start = Math.floor(Math.random() * (numTiles / 8))+1;
+    var end = Math.floor(Math.random() * (numTiles - (numTiles / 8))) + (numTiles / 8)-1;
     var rows = [];
     var count = 1;
     var startPos;

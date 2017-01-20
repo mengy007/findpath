@@ -25,7 +25,7 @@ export default class Board extends Component {
 				} else if (type == "E") {
 					backgroundColor = "#F00";
 				} else if (type == "#") {
-					backgroundColor = "#AAA";
+					backgroundColor = "#777";
 				} else if (type == "P") {
 					backgroundColor = "#55F";
 				} else if (type == "Y") {
