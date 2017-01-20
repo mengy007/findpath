@@ -17,7 +17,8 @@ export default class Board extends Component {
 
 			for (let c = 0; c < this.props.cols; c++) {
 				var type = this.props.tileMap[r][c].type;
-				var backgroundColor = "#FFF";
+				var marker = this.props.tileMap[r][c].marker;
+				var backgroundColor = "#EEE";
 
 				if (type == "S") {
 					backgroundColor = "#0F0";
@@ -28,10 +29,12 @@ export default class Board extends Component {
 				} else if (type == "P") {
 					backgroundColor = "#55F";
 				} else if (type == "Y") {
-					backgroundColor = "#FF5";
+					backgroundColor = "#FF0";
+				} else if (type == "O") {
+					backgroundColor = "#FFA";
 				}
 
-				cols.push(<Tile key={c + "_" + r} type={type} xPos={c} yPos={r} bgColor={backgroundColor} toggleTile={this.props.toggleTile} />);
+				cols.push(<Tile key={c + "_" + r} type={type} marker={marker} xPos={c} yPos={r} bgColor={backgroundColor} toggleTile={this.props.toggleTile} />);
 			}
 
 			rows.push(<tr>{cols}</tr>)

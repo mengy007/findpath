@@ -8,7 +8,7 @@ table {
 	padding: 0;
 	margin: 0;
 	border: 0;
-	border-spacing: 0;
+	border-spacing: 1px;
 }
 
 td {

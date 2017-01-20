@@ -47,6 +47,7 @@ class App extends Component {
 
         cols.push({
           type: type,
+          marker: "",
           x: c,
           y: r
         });
@@ -64,16 +65,20 @@ class App extends Component {
   }
 
   distance(a, b) {
-    return Math.sqrt(Math.pow((b.x-a.x), 2) + Math.pow((b.y-a.y), 2));
+    //return Math.sqrt(Math.pow((b.x-a.x), 2) + Math.pow((b.y-a.y), 2));
+    return Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
   }
 
   inTiles(tile, tiles) {
+    console.log("In Tiles - Checking " + tiles.length + " tiles.");
     for (let i = 0; i < tiles.length; i++) {
       var t = tiles[i];
       if (t.x == tile.x && t.y == tile.y) {
+        console.log("Found");
         return true;
       }
     }
+    console.log("NOT Found");
     return false;
   }
 
@@ -82,7 +87,9 @@ class App extends Component {
     var lowestScoreNode;
 
     for (let i = 0; i < openNodes.length; i++) {
-      if (openNodes[i].g < fScore) {
+      console.log("Checking scores - prev: " + fScore + ", i: " + openNodes[i].f);
+      if (openNodes[i].f < fScore) {
+        fScore = openNodes[i].f;
         lowestScoreNode = i;
       }
     }
@@ -100,11 +107,22 @@ class App extends Component {
   }
 
   calculatePath(tileMap, openNodes, closedNodes, startX, startY, endX, endY) {
+    //debug
+    var count=0;
 
     while (openNodes.length > 0) {
+
+      console.log("Open Nodes:");
+      for (let i = 0; i < openNodes.length; i++) {
+        console.log(openNodes[i].x + "," + openNodes[i].y);
+      }
+
       var lowestOpenNodeIndex = this.lowestFScore(openNodes)
       var currentNode = openNodes[lowestOpenNodeIndex];
+      //var currentNode = openNodes.pop();
       var neighborNodes = [];
+
+      console.log("Lowest score: " + currentNode.f + " : " + currentNode.x + "," + currentNode.y);
 
       // Remove current node from open nodes
       this.removeNode(currentNode, openNodes);
@@ -115,52 +133,131 @@ class App extends Component {
       }
 
       // Get valid neighbor nodes
-      if ((currentNode.x-1) > -1 && tileMap[currentNode.y][currentNode.x-1].type != "#") {
+      if (((currentNode.x-1) > -1) && tileMap[currentNode.y][currentNode.x-1].type != "#") {
         neighborNodes.push({x: currentNode.x-1, y: currentNode.y});
       }
-      if ((currentNode.x+1) < this.state.cols && tileMap[currentNode.y][currentNode.x+1].type != "#") {
+      if (((currentNode.x+1) < this.state.cols) && tileMap[currentNode.y][currentNode.x+1].type != "#") {
         neighborNodes.push({x: currentNode.x+1, y: currentNode.y});
       }
-      if ((currentNode.y+1) < this.state.rows && tileMap[currentNode.y+1][currentNode.x].type != "#") {
+      if (((currentNode.y+1) < this.state.rows) && tileMap[currentNode.y+1][currentNode.x].type != "#") {
         neighborNodes.push({x: currentNode.x, y: currentNode.y+1});
       }
-      if ((currentNode.y-1) < -1 && tileMap[currentNode.y-1][currentNode.x].type != "#") {
+      if (((currentNode.y-1) > -1) && tileMap[currentNode.y-1][currentNode.x].type != "#") {
         neighborNodes.push({x: currentNode.x, y: currentNode.y-1});
       }
+
+      console.log(neighborNodes.length + " neighbor nodes!");
 
       for (let i = 0; i < neighborNodes.length; i++) {
 
         var neighborNode = neighborNodes[i];
+
+        if (this.inTiles(neighborNode, closedNodes)) {
+          console.log("Already in closed nodes");
+          continue;
+        }
+
+        /*
+        if (this.inTiles(neighborNode, openNodes)) {
+          console.log("Already in open nodes");
+          continue;
+        }
+        */
+
         neighborNode.rx = currentNode.x;
         neighborNode.ry = currentNode.y;
 
+        this.setTileR(neighborNode, currentNode);
+
         if (neighborNode.x == endX && neighborNode.y == endY) {
-          // Return reconstruct path
-          return true;
+          console.log("Found end: " + neighborNode.x + "," + neighborNode.y);
+          this.markPath(neighborNode);
+          return currentNode;
         }
 
-        neighborNode.g = currentNode.g + this.distance(currentNode, neighborNode);
-        neighborNode.h = this.distance(neighborNode, {x: endX, y: endY});
-        neighborNode.f = neighborNode.g + neighborNode.h;
+        if (!(neighborNode.x == startX && neighborNode.y == startY)) {
+          this.setTile(neighborNode.x, neighborNode.y, "O");
+        }
+
+        neighborNode.g = currentNode.g + 1;
+        neighborNode.f = neighborNode.g + this.distance(neighborNode, {x: endX, y: endY});
 
         if (this.inTiles(neighborNode, openNodes)) {
-          continue;
+          var nodeIndex = this.getNodeIndex(neighborNode, openNodes);
+          if (nodeIndex > -1 && openNodes[nodeIndex].f < neighborNode.f) {
+            console.log("Skipping: " + neighborNode.x + "," + neighborNode.y);
+            continue;
+          }
         } else if (this.inTiles(neighborNode, closedNodes)) {
-          continue;
+          var nodeIndex = this.getNodeIndex(neighborNode, closedNodes);
+          if (nodeIndex > -1 && closedNodes[nodeIndex].f < neighborNode.f) {
+            console.log("Skipping: " + neighborNode.x + "," + neighborNode.y);
+            continue;
+          }
         } else {
+          console.log("Adding to openNodes: " + neighborNode.x + "," + neighborNode.y);
           openNodes.push(neighborNode);
         }
       }
+
+      //debug
+      if (count++ >= 100) {
+        //return;
+      }
     }
+    console.log("No more open nodes");
 
     return false;
   }
 
-  markPath(tile, startX, startY) {
-    if ((tile.rx == startX && tile.y == startY) || (tile.rx == this.state.endPos[0] && tile.y == this.state.endPos[1])) {
+  getNodeIndex(node, nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      if (node.x == nodes[i].x && node.y == nodes[i].y) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  setTileR(r, n) {
+    var tileMap = this.state.tileMap;
+
+    tileMap[r.y][r.x].rx = n.x;
+    tileMap[r.y][r.x].ry = n.y;
+
+    if (r.x < n.x) {
+      tileMap[r.y][r.x].marker = "⇨";
+    } else if (r.x > n.x) {
+      tileMap[r.y][r.x].marker = "⇦";
+    } else if (r.y < n.y) {
+      tileMap[r.y][r.x].marker = "⇩";
+    } else if (r.y > n.y) {
+      tileMap[r.y][r.x].marker = "⇧";
+    }
+
+    this.setState({
+      rows: this.state.rows,
+      cols: this.state.cols,
+      tileMap: tileMap,
+      startPos: this.state.startPos,
+      endPos: this.state.endPos
+    });
+  }
+
+  markPath(tile) {
+    console.log("Mark Path: " + tile.rx + "," + tile.ry);
+
+    if (tile.rx == this.state.startPos[0] && tile.y == this.state.startPos[1]) {
+      console.log("Mark path done.");
       return;
     } else {
-      this.setTile(tile.rx, tile.ry, "P");
+      if (tile.rx > -1 && tile.ry > -1 && this.state.tileMap[tile.ry][tile.rx].type == "Y") {
+        console.log("Marking " + tile.rx + "," + tile.ry);
+        this.setTile(tile.rx, tile.ry, "P");
+        this.markPath(this.state.tileMap[tile.ry][tile.rx]);
+      } else {
+        console.log("Not marking " + tile.rx + "," + tile.ry + " : " + tile.type);
+      }
     }
   }
 
@@ -174,13 +271,8 @@ class App extends Component {
     var openNodes = [{
       x: startPos[0],
       y: startPos[1],
-      g: this.distance({
-          x: startPos[0],
-          y: startPos[1]
-        }, {
-          x: endPos[0],
-          y: endPos[0]
-        })
+      f: 0,
+      g: this.distance({x: startPos[0], y: startPos[1]}, {x: endPos[0], y: endPos[1]})
     }];
     var closedNodes = [];
     var lastTile;
@@ -189,7 +281,7 @@ class App extends Component {
     // To-Do: A* stuff
     lastTile = this.calculatePath(this.state.tileMap, openNodes, closedNodes, startPos[0], startPos[1], endPos[0], endPos[1]);
 
-    //this.markPath(lastTile, startPos[0], startPos[1]);
+    //this.markPath(lastTile);
 
     this.setState({
       rows: rows,
@@ -198,6 +290,19 @@ class App extends Component {
       startPos: startPos,
       endPos: endPos
     });  
+  }
+
+  setTileMarker(x, y, marker) {
+    var tileMap = this.state.tileMap;
+    tileMap[y][x].marker = marker;
+
+    this.setState({
+      rows: this.state.rows,
+      cols: this.state.cols,
+      tileMap: tileMap,
+      startPos: this.state.startPos,
+      endPos: this.state.endPos
+    });
   }
 
   setTile(x, y, type) {
