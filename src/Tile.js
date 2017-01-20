@@ -12,9 +12,10 @@ export default class Tile extends Component {
 
 	render() {
 		return (
-			<td style={{
-				width: "22px",
-				height: "22px",
+			<td style={{				
+				textAlign: "center",
+				width: "21px",
+				height: "21px",
 				color: this.props.color,
 				backgroundColor: this.props.bgColor,
 				cursor: "pointer"

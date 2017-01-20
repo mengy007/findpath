@@ -16,7 +16,8 @@ class App extends Component {
       cols: numCols,
       tileMap: tileMapData.tileMap,
       startPos: tileMapData.startPos,
-      endPos: tileMapData.endPos
+      endPos: tileMapData.endPos,
+      status: "Click 'Find Path', 'New' or on the map to add and remove walls."
     }
   }
 
@@ -65,29 +66,24 @@ class App extends Component {
   }
 
   distance(a, b) {
-    //return Math.sqrt(Math.pow((b.x-a.x), 2) + Math.pow((b.y-a.y), 2));
-    return Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+    return Math.sqrt(Math.pow((b.x-a.x), 2) + Math.pow((b.y-a.y), 2));
   }
 
   inTiles(tile, tiles) {
-    console.log("In Tiles - Checking " + tiles.length + " tiles.");
     for (let i = 0; i < tiles.length; i++) {
       var t = tiles[i];
       if (t.x == tile.x && t.y == tile.y) {
-        console.log("Found");
         return true;
       }
     }
-    console.log("NOT Found");
     return false;
   }
 
   lowestFScore(openNodes) {
-    var fScore = 9999;
+    var fScore = Infinity;
     var lowestScoreNode;
 
     for (let i = 0; i < openNodes.length; i++) {
-      console.log("Checking scores - prev: " + fScore + ", i: " + openNodes[i].f);
       if (openNodes[i].f < fScore) {
         fScore = openNodes[i].f;
         lowestScoreNode = i;
@@ -107,22 +103,15 @@ class App extends Component {
   }
 
   calculatePath(tileMap, openNodes, closedNodes, startX, startY, endX, endY) {
-    //debug
-    var count=0;
+
+    this.setState({
+      status: "Searching..."
+    });
 
     while (openNodes.length > 0) {
-
-      console.log("Open Nodes:");
-      for (let i = 0; i < openNodes.length; i++) {
-        console.log(openNodes[i].x + "," + openNodes[i].y);
-      }
-
       var lowestOpenNodeIndex = this.lowestFScore(openNodes)
       var currentNode = openNodes[lowestOpenNodeIndex];
-      //var currentNode = openNodes.pop();
       var neighborNodes = [];
-
-      console.log("Lowest score: " + currentNode.f + " : " + currentNode.x + "," + currentNode.y);
 
       // Remove current node from open nodes
       this.removeNode(currentNode, openNodes);
@@ -146,23 +135,13 @@ class App extends Component {
         neighborNodes.push({x: currentNode.x, y: currentNode.y-1});
       }
 
-      console.log(neighborNodes.length + " neighbor nodes!");
-
       for (let i = 0; i < neighborNodes.length; i++) {
 
         var neighborNode = neighborNodes[i];
 
         if (this.inTiles(neighborNode, closedNodes)) {
-          console.log("Already in closed nodes");
           continue;
         }
-
-        /*
-        if (this.inTiles(neighborNode, openNodes)) {
-          console.log("Already in open nodes");
-          continue;
-        }
-        */
 
         neighborNode.rx = currentNode.x;
         neighborNode.ry = currentNode.y;
@@ -170,7 +149,9 @@ class App extends Component {
         this.setTileR(neighborNode, currentNode);
 
         if (neighborNode.x == endX && neighborNode.y == endY) {
-          console.log("Found end: " + neighborNode.x + "," + neighborNode.y);
+          this.setState({
+            status: "Path found!"
+          });
           this.markPath(neighborNode);
           return currentNode;
         }
@@ -182,31 +163,27 @@ class App extends Component {
         neighborNode.g = currentNode.g + 1;
         neighborNode.f = neighborNode.g + this.distance(neighborNode, {x: endX, y: endY});
 
+        this.setTileScore(neighborNode.x, neighborNode.y, neighborNode.f);
+
         if (this.inTiles(neighborNode, openNodes)) {
           var nodeIndex = this.getNodeIndex(neighborNode, openNodes);
           if (nodeIndex > -1 && openNodes[nodeIndex].f < neighborNode.f) {
-            console.log("Skipping: " + neighborNode.x + "," + neighborNode.y);
             continue;
           }
         } else if (this.inTiles(neighborNode, closedNodes)) {
           var nodeIndex = this.getNodeIndex(neighborNode, closedNodes);
           if (nodeIndex > -1 && closedNodes[nodeIndex].f < neighborNode.f) {
-            console.log("Skipping: " + neighborNode.x + "," + neighborNode.y);
             continue;
           }
         } else {
-          console.log("Adding to openNodes: " + neighborNode.x + "," + neighborNode.y);
           openNodes.push(neighborNode);
         }
       }
-
-      //debug
-      if (count++ >= 100) {
-        //return;
-      }
     }
-    console.log("No more open nodes");
 
+    this.setState({
+      status: "No path found!"
+    });
     return false;
   }
 
@@ -245,18 +222,12 @@ class App extends Component {
   }
 
   markPath(tile) {
-    console.log("Mark Path: " + tile.rx + "," + tile.ry);
-
     if (tile.rx == this.state.startPos[0] && tile.y == this.state.startPos[1]) {
-      console.log("Mark path done.");
       return;
     } else {
       if (tile.rx > -1 && tile.ry > -1 && this.state.tileMap[tile.ry][tile.rx].type == "Y") {
-        console.log("Marking " + tile.rx + "," + tile.ry);
         this.setTile(tile.rx, tile.ry, "P");
         this.markPath(this.state.tileMap[tile.ry][tile.rx]);
-      } else {
-        console.log("Not marking " + tile.rx + "," + tile.ry + " : " + tile.type);
       }
     }
   }
@@ -277,11 +248,8 @@ class App extends Component {
     var closedNodes = [];
     var lastTile;
 
-
     // To-Do: A* stuff
     lastTile = this.calculatePath(this.state.tileMap, openNodes, closedNodes, startPos[0], startPos[1], endPos[0], endPos[1]);
-
-    //this.markPath(lastTile);
 
     this.setState({
       rows: rows,
@@ -308,6 +276,19 @@ class App extends Component {
   setTile(x, y, type) {
     var tileMap = this.state.tileMap;
     tileMap[y][x].type = type;
+
+    this.setState({
+      rows: this.state.rows,
+      cols: this.state.cols,
+      tileMap: tileMap,
+      startPos: this.state.startPos,
+      endPos: this.state.endPos
+    });
+  }
+
+  setTileScore(x, y, f) {
+    var tileMap = this.state.tileMap;
+    tileMap[y][x].f = f;
 
     this.setState({
       rows: this.state.rows,
@@ -350,16 +331,22 @@ class App extends Component {
       cols: numCols,
       tileMap: tileMapData.tileMap,
       startPos: tileMapData.startPos,
-      endPos: tileMapData.endPos
+      endPos: tileMapData.endPos,
+      status: "New"
     });
   }
 
   render() {
     return (
       <div style={{ padding: "20px" }}>
-        <Board rows={this.state.rows} cols={this.state.cols} tileMap={this.state.tileMap} toggleTile={this.toggleTile.bind(this)} />
-        <input type="button" value="Find Path" onClick={this.findPath.bind(this)} />
+        <b>Status: {this.state.status}</b>
+        <br />
+        <br />
+        <input type="button" value="Find Path" onClick={this.findPath.bind(this)} />&nbsp;
         <input type="button" value="New" onClick={this.reset.bind(this)} />
+        <br />
+        <br />
+        <Board rows={this.state.rows} cols={this.state.cols} tileMap={this.state.tileMap} toggleTile={this.toggleTile.bind(this)} />
       </div>
     );
   }
