@@ -23,8 +23,8 @@ class App extends Component {
 
   genNewTilemap(numRows, numCols) {
     var numTiles = numRows * numCols;
-    var start = Math.floor(Math.random() * (numTiles / 8))+1;
-    var end = Math.floor(Math.random() * (numTiles - (numTiles / 8))) + (numTiles / 8)-1;
+    var start = Math.floor(Math.random() * (numTiles/10));
+    var end = Math.floor(Math.random() * (numTiles / 10)) + (numTiles - (numTiles / 10))-1;
     var rows = [];
     var count = 1;
     var startPos;
@@ -32,6 +32,7 @@ class App extends Component {
 
     for (let r = 0; r < numRows; r++) {
       var cols = [];
+      var prevType = "B";
 
       for (let c = 0; c < numCols; c++) {
         var type = "B";
@@ -42,8 +43,19 @@ class App extends Component {
         } else if (count == end) {
           type = "E";
           endPos = [c,r];
-        } else if ((Math.random() * 100) < 30) {
-          type = "#";
+        } else {
+          var chanceForWall = 20;
+
+          if (prevType == "#") {
+            chanceForWall = 60;
+          }
+
+          if ((Math.random() * 100) < chanceForWall) {
+            type = "#";
+            prevType = "#";
+          } else {
+            prevType = "B";
+          }
         }
 
         cols.push({
