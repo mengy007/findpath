@@ -24,8 +24,8 @@ class App extends Component {
   genMaze(e) {
     var numRows = this.state.rows;
     var numCols = this.state.cols;
-    var x = Math.floor(Math.random() * numCols);
-    var y = Math.floor(Math.random() * numRows);
+    var sx = Math.floor(Math.random() * numCols);
+    var sy = Math.floor(Math.random() * numRows);
     var cells = [];
 
     //Fill with walls
@@ -35,24 +35,26 @@ class App extends Component {
 
     var count = 0;
 
-    cells.push({x: x, y: y});
+    cells.push({x: sx, y: sy});
 
     console.log("Cells: " + cells.length);
 
-    this.setTile(x, y, "B");
+    this.setTile(sx, sy, "B");
 
     while (cells.length > 0) {
       var index = Math.floor(Math.random() * cells.length);
       var x = cells[index].x;
       var y = cells[index].y;
       var dirs = [];
+      var failed = false;
 
       dirs.push({x: x-2, y: y}); // Left
       dirs.push({x: x+2, y: y}); // Right
       dirs.push({x: x, y: y-2}); // Up
       dirs.push({x: x, y: y+2}); // Down
 
-      while (index > -1 && dirs.length > 0) {
+      //while (!failed && dirs.length > 0) {
+      while (dirs.length > 0) {
         var dirIndex = Math.floor(Math.random() * dirs.length);
         var dir = dirs[dirIndex];
 
@@ -78,23 +80,24 @@ class App extends Component {
           // Add neighbor to list
           cells.push({x: dir.x, y: dir.y});
 
-          index = -1;
+          failed = true;
         }
 
         dirs.splice(dirIndex, 1);
       }
 
-      //cells.splice(index, 1);
+      console.log("Cells: " + cells.length);
+      cells.splice(index, 1);
 
       tileMap[this.state.startPos[1]][this.state.startPos[0]].type = "S";
       tileMap[this.state.endPos[1]][this.state.endPos[0]].type = "E";
-
+     
       if (count++ >= 20000) {
-        break;
+        //break;
       }
     }
 
-    console.log("Done genMaze");
+    console.log("Done genMaze: " + count);
 
     this.setState({
       tileMap: tileMap
@@ -369,12 +372,10 @@ class App extends Component {
   }
 
   findPath(e) {
-    var tileMap = this.state.tileMap;
     var rows = this.state.rows;
     var cols = this.state.cols;
     var startPos = this.state.startPos;
     var endPos = this.state.endPos;
-    var foundEnd = false;
     var openNodes = [{
       x: startPos[0],
       y: startPos[1],
@@ -385,7 +386,7 @@ class App extends Component {
     var lastTile;
 
     // To-Do: A* stuff
-    lastTile = this.calculatePath(this.state.tileMap, openNodes, closedNodes, startPos[0], startPos[1], endPos[0], endPos[1]);
+    this.calculatePath(this.state.tileMap, openNodes, closedNodes, startPos[0], startPos[1], endPos[0], endPos[1]);
 
     this.setState({
       rows: rows,

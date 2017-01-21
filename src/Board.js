@@ -1,16 +1,10 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import Tile from './Tile';
 
 export default class Board extends Component {
-	constructor() {
-		super();
-	}
-
+	
 	render() {
-		const numTiles = this.props.rows * this.props.cols;
 		var rows = [];
-		var start = Math.floor(Math.random() * (numTiles / 2));
-		var end = Math.floor(Math.random() * (numTiles - (numTiles / 2)) + (numTiles / 2));
 
 		for (let r = 0; r < this.props.rows; r++) {
 			var cols = [];
@@ -37,18 +31,18 @@ export default class Board extends Component {
 					cr = tr.toString(16);
 				}
 
-				if (type == "S") {
+				if (type === "S") {
 					backgroundColor = "#0F0";
-				} else if (type == "E") {
+				} else if (type === "E") {
 					backgroundColor = "#F00";
-				} else if (type == "#") {
+				} else if (type === "#") {
 					backgroundColor = "#777";
-				} else if (type == "P") {
+				} else if (type === "P") {
 					backgroundColor = "#" + cr + cg + cb;
 					color = "#FFF";
-				} else if (type == "Y") {
+				} else if (type === "Y") {
 					backgroundColor = "#EEE";
-				} else if (type == "O") {
+				} else if (type === "O") {
 					backgroundColor = "#EEE";
 				}
 
