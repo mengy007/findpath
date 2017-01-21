@@ -5,7 +5,7 @@ import './App.css';
 class App extends Component {
   constructor() {
     var numRows = 40;
-    var numCols = 80;
+    var numCols = 71;
     
     super();
 
@@ -19,6 +19,130 @@ class App extends Component {
       endPos: tileMapData.endPos,
       status: "Click 'Find Path', 'New' or on the map to add and remove walls."
     }
+  }
+
+  genMaze(e) {
+    var numRows = this.state.rows;
+    var numCols = this.state.cols;
+    var x = Math.floor(Math.random() * numCols);
+    var y = Math.floor(Math.random() * numRows);
+    var cells = [];
+
+    //Fill with walls
+    this.fillWalls(null);
+
+    var tileMap = this.state.tileMap;
+
+    var count = 0;
+
+    cells.push({x: x, y: y});
+
+    console.log("Cells: " + cells.length);
+
+    this.setTile(x, y, "B");
+
+    while (cells.length > 0) {
+      var index = Math.floor(Math.random() * cells.length);
+      var x = cells[index].x;
+      var y = cells[index].y;
+      var dirs = [];
+
+      dirs.push({x: x-2, y: y}); // Left
+      dirs.push({x: x+2, y: y}); // Right
+      dirs.push({x: x, y: y-2}); // Up
+      dirs.push({x: x, y: y+2}); // Down
+
+      while (index > -1 && dirs.length > 0) {
+        var dirIndex = Math.floor(Math.random() * dirs.length);
+        var dir = dirs[dirIndex];
+
+        if (dir.x >= 0 && dir.y >= 0 && dir.x < numCols && dir.y < numRows && (tileMap[dir.y][dir.x].type == "#" || tileMap[dir.y][dir.x].type == "S" || tileMap[dir.y][dir.x].type == "E" )) {
+          if (dir.x < x) {
+            tileMap[y][x].type = "B";
+            tileMap[y][x-1].type = "B";
+            tileMap[y][x-2].type = "B";
+          } else if (dir.x > x) {
+            tileMap[y][x].type = "B";
+            tileMap[y][x+1].type = "B";
+            tileMap[y][x+2].type = "B";
+          } else if (dir.y < y) {
+            tileMap[y][x].type = "B";
+            tileMap[y-1][x].type = "B";
+            tileMap[y-2][x].type = "B";
+          } else if (dir.y > y) {
+            tileMap[y][x].type = "B";
+            tileMap[y+1][x].type = "B";
+            tileMap[y+2][x].type = "B";
+          }
+
+          // Add neighbor to list
+          cells.push({x: dir.x, y: dir.y});
+
+          index = -1;
+        }
+
+        dirs.splice(dirIndex, 1);
+      }
+
+      //cells.splice(index, 1);
+
+      tileMap[this.state.startPos[1]][this.state.startPos[0]].type = "S";
+      tileMap[this.state.endPos[1]][this.state.endPos[0]].type = "E";
+
+      if (count++ >= 20000) {
+        break;
+      }
+    }
+
+    console.log("Done genMaze");
+
+    this.setState({
+      tileMap: tileMap
+    });
+  }
+
+  clearPath(e) {
+    var tileMap = this.state.tileMap;
+
+    for (let r = 0; r < this.state.rows; r++) {
+      for (let c = 0; c < this.state.cols; c++) {
+        var tile = tileMap[r][c];
+        if (tile.type != "S" && tile.type != "E" && tile.type != "#") {
+          tileMap[r][c].type = "B";
+          tileMap[r][c].marker = "";
+        }
+      }
+    }
+
+    this.setState({
+      tileMap: tileMap
+    });
+  }
+
+  fillTiles(type) {
+    var tileMap = this.state.tileMap;
+
+    for (let r = 0; r < this.state.rows; r++) {
+      for (let c = 0; c < this.state.cols; c++) {
+        var tile = tileMap[r][c];
+        if (tile.type != "S" && tile.type != "E") {
+          tileMap[r][c].type = type;
+          tileMap[r][c].marker = "";
+        }
+      }
+    }
+
+    this.setState({
+      tileMap: tileMap
+    });
+  }
+
+  clearTiles(e) {
+    this.fillTiles("B");
+  }
+
+  fillWalls(e) {
+    this.fillTiles("#");
   }
 
   genNewTilemap(numRows, numCols) {
@@ -316,6 +440,9 @@ class App extends Component {
     var type = tileMap[y][x].type;
     var newType = "B";
 
+    // clear path
+    this.clearPath(null);
+
     if (type == "B") {
       newType = "#";
       tileMap[y][x].type = newType;
@@ -355,7 +482,11 @@ class App extends Component {
         <br />
         <br />
         <input type="button" value="Find Path" onClick={this.findPath.bind(this)} />&nbsp;
-        <input type="button" value="New" onClick={this.reset.bind(this)} />
+        <input type="button" value="Clear Path" onClick={this.clearPath.bind(this)} />&nbsp;
+        <input type="button" value="New" onClick={this.reset.bind(this)} />&nbsp;
+        <input type="button" value="Clear Map" onClick={this.clearTiles.bind(this)} />&nbsp;
+        <input type="button" value="Fill Map" onClick={this.fillWalls.bind(this)} />&nbsp;
+        <input type="button" value="Generate Maze" onClick={this.genMaze.bind(this)} />&nbsp;
         <br />
         <br />
         <Board rows={this.state.rows} cols={this.state.cols} tileMap={this.state.tileMap} toggleTile={this.toggleTile.bind(this)} />
